@@ -1,0 +1,13 @@
+# humanstxt.org/
+
+
+# The humans responsible
+
+# TEAM
+
+    Roberto Martín -- Programmer -- @BobString
+
+# THANKS
+
+    Roberto
+

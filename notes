@@ -1,0 +1,14 @@
+==== GRUNT ====
+
+grunt dbdrop --> dump database
+grunt dbseed --> create databe and couple of users
+
+==== Rserve ====
+bash -> R
+R -> library(Rserve)
+R -> Rserve()
+
+==== Node ====
+bash -> node app.js
+Users: admin - secret
+        bob - secret
