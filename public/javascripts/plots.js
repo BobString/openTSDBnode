@@ -111,7 +111,7 @@ function r_mode_exec() {
    var timef =  new Date().getTime();
    console.log("(2) Time: "+ (timef - times)+" ms")
 
-});
+};
 
 function getQueryData(amountMode){
     var data;

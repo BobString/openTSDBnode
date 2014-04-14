@@ -15,6 +15,7 @@ var express = require('express')
  stats = require('./routes/stats'),
  version = require('./routes/version'),
  tsdbconf = require('./routes/tsdbconf'),
+ reports = require('./routes/reports'),
  http = require('http'),
  path = require('path'),
  io = require('socket.io');
@@ -72,15 +73,22 @@ app.post('/saveReport', function(request, response){
     if(method && testgroup && dpsize && stage && description && time){
         //All parameters are there
          console.log("POST VARIABLES: "+method+" ,"+ testgroup+" ,"+dpsize+" ,"+ stage+" ,"+description+" ,"+time);
-         //var answer = saveReport (method, testgroup, dpsize, stage, description, time);
-         response.status(418);
-         if (request.accepts('json')) {
-         response.send({ message: 'Post done' });
-        return;
+         var answer = saveReport (method, testgroup, dpsize, stage, description, time);
+         if(answer != 0){
+         
+             response.status(418);
+             if (request.accepts('json')) {
+             response.send({ message: 'Post done' });
+            return;
+            }else{
+              // default to plain-text. send()
+              response.type('txt').send('Post done');
+            }
         }else{
-          // default to plain-text. send()
-          response.type('txt').send('Post done');
-        }  
+        response.status(500);
+        response.send({ error: 'Error saving report' });
+        
+        }
    }else{
         response.status(500);
         if (request.accepts('json')) {
@@ -91,8 +99,41 @@ app.post('/saveReport', function(request, response){
           response.type('txt').send('Parameter missing');
         }  
    }
+   
+   
     
 });
+
+app.get('/reports', reports.reports);
+app.get('/removereport', function(request, res){
+    var id = request.query.id;
+    
+    if(id){
+        db.reportModel.remove({ _id: id }, function (err) {
+          if (err){
+             res.locals.title = 'Remove report';
+             res.locals.block= 'Error deleting the report';
+             res.render('generic');
+         }else{
+         
+            res.locals.title = 'Remove report';
+            res.locals.block= 'Report deleted correctly';
+            res.render('generic');
+         }
+        });
+    
+    }else{
+         
+          res.locals.title = 'Remove report';
+          res.locals.block= 'Error deleting the report, no id provided';
+          res.render('generic');
+            
+         }
+});
+    
+    
+
+
 
 function saveReport (meth, tg, dpsz, stg, desc, t){
     var report = new db.reportModel({ method: meth
