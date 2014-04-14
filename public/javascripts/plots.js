@@ -5,11 +5,11 @@
 if (typeof sockethandler == 'undefined') { var sockethandler = {}; }
 
 var socket = io.connect();
-socket.on("dataServer", function(data,id) {
-   //TODO: Aquí recivimos los puntos y los pintamos skisos con highchart
+socket.on("dataServer", function(data) {
+   //TODO: Aquí recibimos los puntos y los pintamos skisos con highchart
    var times =  new Date().getTime();
-   console.log('Got asnwer from server, id: '+ id);
-   var element=document.getElementById(id);
+   console.log('Got asnwer from server');
+   var element=document.getElementById("plot");
    var object = $.parseJSON(data);
    //$(element).html(sockethandler.view1(data));
    
@@ -74,8 +74,8 @@ socket.on("dataServer", function(data,id) {
             series: [{
                 type: 'area',
                 name: 'Temperature (ºC)',
-                pointInterval: 60 * 1000, //Every minute, for one day: (24 * 3600 * 1000)
-                pointStart: Date.UTC(2013,8,4,12,0,0),
+                pointInterval: 60 * 1000*10, //Every 10 minute, for one day: (24 * 3600 * 1000)
+                pointStart: Date.UTC(2014,4,4,12,0,0),
                 data: object
             }]
         });
@@ -85,7 +85,10 @@ socket.on("dataServer", function(data,id) {
    socket.disconnect();
    var timef =  new Date().getTime();
    console.log("(4) Time: "+ (timef - times)+" ms")
-})
+   
+   //TODO: Call report function from server and show results.
+   
+});
 
 sockethandler.view1=function(data) {
  return "The message is:"+data;
@@ -94,82 +97,96 @@ sockethandler.view1=function(data) {
 sockethandler.view2=function(data) {
  return "The result is:"+data.result;
 }
-$(function() {
-   /*
+
+
+function r_mode_exec() {
+   
    var times =  new Date().getTime();
-   $(".plots").each(function(el) {
-       //TODO: Hacemos la peticion de los puntos por cada plot
-      socket.emit("getDataPoints", {},$(this).attr('id'));
-  });
-  
+   
+   //TODO: Hacemos la peticion de los puntos
+   
+   var amountMode = 1;
+   socket.emit("getDataPoints", getQueryData(amountMode));
+
    var timef =  new Date().getTime();
    console.log("(2) Time: "+ (timef - times)+" ms")
-	*/
+
 });
 
-function newplot(){
-
-	$("#plotDiv").append(generateFormBlock());
-
-}
-
-function generateFormBlock(){
-    var res = "";
+function getQueryData(amountMode){
+    var data;
+    //FIXME: All mode has same amount of points
+    
+    switch (amountMode){
+      case 1:
+      //Small amount 420
+        data = {
+            metric: 'cipsi.weather.TA',
+            start: {timestamp:'2014/04/04-12:00:00', timezone:'CEST'},
+            end: {timestamp:'2014/04/07-12:00:00', timezone:'CEST'},
+            tags:[{name:'station', value:'44560'}],
+            debug:true
+        };
+        break;
+      case 2:
+      //Medium amount
+        data = {
+            metric: 'cipsi.weather.TA',
+            start: {timestamp:'2014/04/04-12:00:00', timezone:'CEST'},
+            end: {timestamp:'2014/04/07-12:00:00', timezone:'CEST'},
+            tags:[{name:'station', value:'44560'}],
+            debug:true
+        };
+        break;
+      case 3:
+      //Large amount
+        data = {
+            metric: 'cipsi.weather.TA',
+            start: {timestamp:'2014/04/04-12:00:00', timezone:'CEST'},
+            end: {timestamp:'2014/04/07-12:00:00', timezone:'CEST'},
+            tags:[{name:'station', value:'44560'}],
+            debug:true
+        };
+        break;
+      default:
+          data = {
+                metric: 'cipsi.weather.TA',
+                start: {timestamp:'2014/04/04-12:00:00', timezone:'CEST'},
+                end: {timestamp:'2014/04/07-12:00:00', timezone:'CEST'},
+                tags:[{name:'station', value:'44560'}],
+                debug:true
+            };
+        break;
+      }
+    
+    //420 datapoints
    
-        res += "<!-- block -->";
-        res += "<div id='flipbox' class='block' style='width: 500px;'>";
-        res += "<div class='navbar navbar-inner block-header'>";
-        res += "<div class='muted pull-left'>"+"New Plot"+"</div>";
-        res += "</div>";
-        res += "<div class='block-content collapse in'>";
-        res +="<div class='span12'><form class='form-horizontal' onSubmit='JavaScript:handleClick()'> <fieldset>   <legend>New Plot</legend>   <div class='control-group'>     <label class='control-label' for='metric'>Metric</label>     <div class='controls'><input class='input-xlarge' id='metric' type='text' value='cipsi.seeds.test1.temperature'>    </div>  </div><div class='control-group'>    <label class='control-label' for='date01'>Start date</label>    <div class='controls'><input type='text' class='input-xlarge datepicker' id='date01' value='02/16/12'><p class='help-block'>Start date for data points</p>    </div>  </div>  <div class='control-group'>    <label class='control-label' for='date02'>End date</label>    <div class='controls'><input type='text' class='input-xlarge datepicker' id='date02' value='02/17/12'><p class='help-block'>End date for data points</p>    </div>  </div><div class='control-group'>    <label class='control-label' for='tags'>Tags</label>    <div class='controls'><input class='input-xlarge' id='tags' type='text' value='node(0013A2004061646F)'>    </div>  </div>  <div class='form-actions'>    <button type='submit' class='btn btn-primary' id='saveb'>Save changes</button>    <button type='reset' class='btn'>Cancel</button>  </div></fieldset>  </form> </div>"
-        res += "</div>";
-        res += "</div>";
-        res += "<!-- block -->";   
-	    
-
-    return res;
+    
+    return data;
 }
 
-function generatePlotBlock(){
-    var res = "";
-   
-        res += "<!-- block -->";
-        res += "<div id='flipbox' class='block' style='width: 800px; margin-bottom: 0px;'>";
-        res += "<div class='navbar navbar-inner block-header'>";
-        res += "<div class='muted pull-left'>"+"New Plot"+"</div>";
-        res += "</div>";
-        res += "<div class='block-content collapse in'>";
-        res += "<div id='container'>";
-			res += "</div>";
-        res +="<button class='btn btn-danger' onclick='revert()'>Revert</button>";
-        res += "</div>";
-        res += "</div>";
-        res += "<!-- block -->";   
-	    
-
-    return res;
-}
-
-
-function revert() {
-
-	$("#flipbox").revertFlip({
-		direction:'tb',
-		onEnd: function(){
-			$("#saveb").attr('onclick', '$("#flipbox").revertFlip()');
-			$("#saveb").attr('type', '');
-		}
-	
-	});
-	
-	
-	
-}
 
 function handleClick() {
-	
-	$("#flipbox").flip({
+	var e = document.getElementById("selectMode");
+    var strUser = e.options[e.selectedIndex].value;
+    switch (strUser){
+      case 1:
+      //R mode
+        x="Today is Monday";
+        break;
+      case 2:
+      //Server HTML API mode
+        x="Today is Tuesday";
+        break;
+      case 3:
+      //Client HTML API mode
+        x="Today is Wednesday";
+        break;
+      default:
+        break;
+      }
+
+	/*$("#flipbox").flip({
 		direction:'rl',
 		content:generatePlotBlock(),
 		color:"white",
@@ -177,9 +194,7 @@ function handleClick() {
 				plot();
 		}
 	});
- 	
-
-	event.preventDefault();
+ 	event.preventDefault();*/
 	
 	
 }

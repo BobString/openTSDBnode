@@ -5,6 +5,6 @@
 
 exports.sign = function(req, res){
 
-  res.render('login',  {user: req.user, message: req.flash('error') });
+  res.render('login',  {layout: '', user: req.user, message: req.flash('error') });
 };
 

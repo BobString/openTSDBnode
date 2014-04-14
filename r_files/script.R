@@ -37,7 +37,7 @@ getDatapoints <- function (data) {
   start <- interval(ymd_hms(starttime, tz = startObj[2]), ymd_hms(endObj[1], tz = endObj[2]))
   cat('Lets go for the results \n')
   #results <- tsd_get(metric,start,tags=c(node='0013A2004061646F'),hostname="haisen23.ux.uis.no",port=4242)
-  timeTSDB <- system.time(results <- tsd_get(metric,start,tags=c(node='0013A2004061646F'),hostname="haisen23.ux.uis.no",port=4242))
+  timeTSDB <- system.time(results <- tsd_get(metric,start,tags=c(node='0013A2004061646F'),hostname="haisen36.ux.uis.no",port=4242))
   cat("Time doing petition to TSDB: ", timeTSDB[3],"\n")
   cat('results done \n')
 

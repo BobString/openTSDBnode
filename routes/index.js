@@ -9,7 +9,9 @@ exports.index = function(req, res){
   var plots = [{title:'Plot 1',id:'plot_1'}];
   //var blocks = generatePlotBlock(plots);
   var blocks ="";
-  res.render('index', { title: 'Express', blocks:blocks, user: req.user });
+  res.locals.blocks = blocks;
+  res.locals.user = req.user
+  res.render('index');
   var time2 =  new Date().getTime();
   console.log("(1) Time: "+(time2-time)+" ms");
 };

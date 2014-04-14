@@ -85,9 +85,23 @@ tokenSchema.methods.consumeRememberMeToken= function(token, fn) {
   var uid = token.usernameid;
   token.remove();
   return fn(null, uid);
-}
+};
 var tokenModel = mongoose.model('Token', tokenSchema);
 exports.tokenModel = tokenModel;
+
+//  ========== Report Schema ==========
+
+var reportSchema = new Schema({
+  method: { type: Number, required: true}, // 1:R, 2:Server, 3:Client
+  testgroup: { type: Number, required: true},
+  dpsize: { type: Number, required: true},
+  stage: { type: Number, required: true},
+  description: { type: String, required: true},
+  time: { type: Number, required: true}, //ms
+});
+
+var reportModel = mongoose.model('Report', reportSchema);
+exports.reportModel = reportModel;
 
 
 
