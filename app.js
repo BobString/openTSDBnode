@@ -9,14 +9,18 @@ var express = require('express')
   , pass = require('./config/pass')
   , passport = require('passport')
    , flash = require('connect-flash')
+   , config = require("./config/config");
  routes = require('./routes'),
  user = require('./routes/user'),
  login = require('./routes/login'),
  stats = require('./routes/stats'),
  version = require('./routes/version'),
+ testData = require('./routes/gettingData'),
+ android = require('./routes/android'),
  tsdbconf = require('./routes/tsdbconf'),
  reports = require('./routes/reports'),
  http = require('http'),
+ nodetsdblib = require('nodetsdb'),
  path = require('path'),
  io = require('socket.io');
 
@@ -52,7 +56,8 @@ if ('development' == app.get('env')) {
   app.use(express.errorHandler());
 }
 
-app.get('/',pass.ensureAuthenticated,routes.index);
+//app.get('/',pass.ensureAuthenticated,routes.index);
+app.get('/',routes.index);
 app.get('/statistics',pass.ensureAuthenticated,stats.stats);
 app.get('/tsdbversion',pass.ensureAuthenticated,version.version);
 app.get('/tsdbconf',pass.ensureAuthenticated,tsdbconf.conf);
@@ -72,7 +77,6 @@ app.post('/saveReport', function(request, response){
     
     if(method && testgroup && dpsize && stage && description && time){
         //All parameters are there
-         console.log("POST VARIABLES: "+method+" ,"+ testgroup+" ,"+dpsize+" ,"+ stage+" ,"+description+" ,"+time);
          var answer = saveReport (method, testgroup, dpsize, stage, description, time);
          if(answer != 0){
          
@@ -105,6 +109,8 @@ app.post('/saveReport', function(request, response){
 });
 
 app.get('/reports', reports.reports);
+app.get('/testdata', testData.getData);
+app.get('/android.json', android.getData);
 app.get('/removereport', function(request, res){
     var id = request.query.id;
     
@@ -278,6 +284,33 @@ websocket.sockets.on('connection', function (socket) {
      //console.log('Got Request from client '+id);
      //var data={"message":"Hello World!", options:options};
      
+     /* ServerMode */
+     socket.on('getDPServerMode', function (options) {
+         var time1 =  new Date().getTime();
+         if(!options){
+             options = {start:'2014/04/04-12:00:00',
+                        end:'2014/04/18-15:46:17', 
+                        metric:'cipsi.weather.UU', 
+                        aggregator:'avg', 
+                        tags:{station:44640, quality_code:0}};
+         }
+         
+         var nodetsdb = new nodetsdblib({host:config.opentsdbserver, port:config.opentsdbserverport});
+         
+         nodetsdb.getDataPoints(options, function(dp){
+             console.log('callback!');
+             if(dp){
+				console.log('Dp response size: '+dp.length);
+				console.log('Dps: '+dp);
+                //There are datapoints
+                 socket.emit("dataServer",dp);
+             }else{
+                //There are not datapoints
+                console.log('Sorry no datapoints');
+             }
+          
+  		});
+  	});
 });
 
 function executeRio(data, callback){

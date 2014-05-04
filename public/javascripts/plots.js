@@ -11,9 +11,29 @@ socket.on("dataServer", function(data) {
    console.log('Got asnwer from server');
    var element=document.getElementById("plot");
    var object = $.parseJSON(data);
-   //$(element).html(sockethandler.view1(data));
+
+   var datapoints = object[0].dps;
+   console.log("Size: "+ datapoints.length);
    
-   console.log("Size: "+ object.length);
+   var dparray = '[';
+   var j = 0;
+   for(i in datapoints){
+            if(j == 0){
+                var start = i;
+                dparray += datapoints[i].toFixed(3);
+                j++;
+                continue;
+            }
+            dparray += ',' +datapoints[i].toFixed(3);
+            j++;
+            
+            /*if(j == 10){
+            break;
+            }*/
+   }
+   dparray += ']';
+   console.log('dp array: '+dparray.length);
+   console.log('dp array: '+dparray);
    
    $(function () {
         $(element).highcharts({
@@ -66,8 +86,8 @@ socket.on("dataServer", function(data) {
                             lineWidth: 1
                         }
                     },
-                    threshold: null,
-                    turboThreshold: 8000
+                    threshold: null/*,
+                    turboThreshold: 8000*/
                 }
             },
     
@@ -75,8 +95,8 @@ socket.on("dataServer", function(data) {
                 type: 'area',
                 name: 'Temperature (ºC)',
                 pointInterval: 60 * 1000*10, //Every 10 minute, for one day: (24 * 3600 * 1000)
-                pointStart: Date.UTC(2014,4,4,12,0,0),
-                data: object
+                pointStart: Date.UTC(2006, 0, 01),
+                data: JSON.parse(dparray)
             }]
         });
     });
@@ -118,44 +138,38 @@ function getQueryData(amountMode){
     //FIXME: All mode has same amount of points
     
     switch (amountMode){
+        
       case 1:
       //Small amount 420
-        data = {
-            metric: 'cipsi.weather.TA',
-            start: {timestamp:'2014/04/04-12:00:00', timezone:'CEST'},
-            end: {timestamp:'2014/04/07-12:00:00', timezone:'CEST'},
-            tags:[{name:'station', value:'44560'}],
-            debug:true
-        };
+         data = {start:'2014/04/04-12:00:00',
+                        end:'2014/04/07-12:00:00', 
+                        metric:'cipsi.weather.TA', 
+                        aggregator:'avg', 
+                        tags:{station:44640, quality_code:0}};
         break;
       case 2:
       //Medium amount
-        data = {
-            metric: 'cipsi.weather.TA',
-            start: {timestamp:'2014/04/04-12:00:00', timezone:'CEST'},
-            end: {timestamp:'2014/04/07-12:00:00', timezone:'CEST'},
-            tags:[{name:'station', value:'44560'}],
-            debug:true
-        };
+        data = {start:'2014/04/04-12:00:00',
+                        end:'2014/04/07-12:00:00', 
+                        metric:'cipsi.weather.TA', 
+                        aggregator:'avg', 
+                        tags:{station:44640, quality_code:0}};
         break;
       case 3:
       //Large amount
-        data = {
-            metric: 'cipsi.weather.TA',
-            start: {timestamp:'2014/04/04-12:00:00', timezone:'CEST'},
-            end: {timestamp:'2014/04/07-12:00:00', timezone:'CEST'},
-            tags:[{name:'station', value:'44560'}],
-            debug:true
-        };
+        data = {start:'2014/04/04-12:00:00',
+                        end:'2014/04/07-12:00:00', 
+                        metric:'cipsi.weather.TA', 
+                        aggregator:'avg', 
+                        tags:{station:44640, quality_code:0}};
         break;
       default:
-          data = {
-                metric: 'cipsi.weather.TA',
-                start: {timestamp:'2014/04/04-12:00:00', timezone:'CEST'},
-                end: {timestamp:'2014/04/07-12:00:00', timezone:'CEST'},
-                tags:[{name:'station', value:'44560'}],
-                debug:true
-            };
+          console.log('default dp size');
+          data = {start:'2014/04/04-12:00:00',
+                        end:'2014/04/07-12:00:00', 
+                        metric:'cipsi.weather.TA', 
+                        aggregator:'avg', 
+                        tags:{station:44640, quality_code:0}};
         break;
       }
     
@@ -167,38 +181,43 @@ function getQueryData(amountMode){
 
 
 function handleClick() {
+    console.log('Handle click!');
+    //Hide the form
+    var el = document.getElementById('flipbox');
+    el.style.display = 'none';
+    
 	var e = document.getElementById("selectMode");
     var strUser = e.options[e.selectedIndex].value;
+    
+    var e = document.getElementById("selectAmount");
+    var amountPoints = e.options[e.selectedIndex].value;
+    console.log('User option: '+strUser);
     switch (strUser){
-      case 1:
-      //R mode
+      case '1':
+        //R mode
+        console.log('R mode');
         x="Today is Monday";
         break;
-      case 2:
-      //Server HTML API mode
-        x="Today is Tuesday";
+      case '2':
+        //Server HTML API mode
+        console.log('Server mode');     
+        handleServer(amountPoints);       
         break;
-      case 3:
-      //Client HTML API mode
+      case '3':
+        //Client HTML API mode
+        console.log('Client mode');      
         x="Today is Wednesday";
         break;
       default:
+        console.log('Default!');
         break;
       }
-
-	/*$("#flipbox").flip({
-		direction:'rl',
-		content:generatePlotBlock(),
-		color:"white",
-		onEnd: function(){
-				plot();
-		}
-	});
- 	event.preventDefault();*/
-	
-	
+      event.preventDefault();
 }
 
+function handleServer(amountPoints){
+     socket.emit("getDPServerMode", getQueryData(amountPoints));
+};
 
 
 function plot() {
