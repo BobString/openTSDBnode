@@ -51,7 +51,7 @@ app.use(passport.authenticate('remember-me'));
 app.use(app.router);
 app.use(express.static(path.join(__dirname, 'public')));
 
-// development only
+// development only/usr/bin/env: node: No such file or directory
 if ('development' == app.get('env')) {
   app.use(express.errorHandler());
 }
@@ -287,7 +287,9 @@ websocket.sockets.on('connection', function (socket) {
      /* ServerMode */
      socket.on('getDPServerMode', function (options) {
          var time1 =  new Date().getTime();
+	
          if(!options){
+		console.log("No options, taking default");
              options = {start:'2014/04/04-12:00:00',
                         end:'2014/04/18-15:46:17', 
                         metric:'cipsi.weather.UU', 
@@ -300,8 +302,7 @@ websocket.sockets.on('connection', function (socket) {
          nodetsdb.getDataPoints(options, function(dp){
              console.log('callback!');
              if(dp){
-				console.log('Dp response size: '+dp.length);
-				console.log('Dps: '+dp);
+		console.log('Dp response size: '+dp.length);
                 //There are datapoints
                  socket.emit("dataServer",dp);
              }else{

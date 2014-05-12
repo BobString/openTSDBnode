@@ -33,7 +33,7 @@ socket.on("dataServer", function(data) {
    }
    dparray += ']';
    console.log('dp array: '+dparray.length);
-   console.log('dp array: '+dparray);
+//   console.log('dp array: '+dparray);
    
    $(function () {
         $(element).highcharts({
@@ -135,36 +135,38 @@ function r_mode_exec() {
 
 function getQueryData(amountMode){
     var data;
-    //FIXME: All mode has same amount of points
-    
+    console.log('[getQueryData] Amount of points requested: '+amountMode);
+
     switch (amountMode){
-        
-      case 1:
-      //Small amount 420
+      case '1':
+      //Small amount 420 points
+	console.log('[getQueryData] Small amount of points');
          data = {start:'2014/04/04-12:00:00',
                         end:'2014/04/07-12:00:00', 
                         metric:'cipsi.weather.TA', 
                         aggregator:'avg', 
                         tags:{station:44640, quality_code:0}};
         break;
-      case 2:
-      //Medium amount
+      case '2':
+      //Medium amount 1428 points
+	console.log('[getQueryData] Medium amount of points');
         data = {start:'2014/04/04-12:00:00',
-                        end:'2014/04/07-12:00:00', 
+                        end:'2014/04/14-12:00:00', 
                         metric:'cipsi.weather.TA', 
                         aggregator:'avg', 
                         tags:{station:44640, quality_code:0}};
         break;
-      case 3:
-      //Large amount
+      case '3':
+      //Large amount 4450 points
+	console.log('[getQueryData] Large amount of points');
         data = {start:'2014/04/04-12:00:00',
-                        end:'2014/04/07-12:00:00', 
+                        end:'2014/05/05-12:00:00', 
                         metric:'cipsi.weather.TA', 
                         aggregator:'avg', 
                         tags:{station:44640, quality_code:0}};
         break;
       default:
-          console.log('default dp size');
+          console.log('[getQueryData] Default amount of points');
           data = {start:'2014/04/04-12:00:00',
                         end:'2014/04/07-12:00:00', 
                         metric:'cipsi.weather.TA', 
@@ -181,35 +183,36 @@ function getQueryData(amountMode){
 
 
 function handleClick() {
-    console.log('Handle click!');
+    console.log('[handleClick] Handle click!');
     //Hide the form
     var el = document.getElementById('flipbox');
     el.style.display = 'none';
     
-	var e = document.getElementById("selectMode");
+    var e = document.getElementById("selectMode");
     var strUser = e.options[e.selectedIndex].value;
     
     var e = document.getElementById("selectAmount");
     var amountPoints = e.options[e.selectedIndex].value;
-    console.log('User option: '+strUser);
+
+    console.log('[handleClick] User option: '+strUser);
     switch (strUser){
       case '1':
         //R mode
-        console.log('R mode');
+        console.log('[handleClick] R mode');
         x="Today is Monday";
         break;
       case '2':
         //Server HTML API mode
-        console.log('Server mode');     
+        console.log('[handleClick] Server mode');     
         handleServer(amountPoints);       
         break;
       case '3':
         //Client HTML API mode
-        console.log('Client mode');      
+        console.log('[handleClick] Client mode');      
         x="Today is Wednesday";
         break;
       default:
-        console.log('Default!');
+        console.log('[handleClick] Default!');
         break;
       }
       event.preventDefault();
