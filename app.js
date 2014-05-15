@@ -226,6 +226,27 @@ app.get('/data.json',pass.ensureAdmin(),function(req,res){
     
 });
 
+// =========== Python part =========== 
+app.get('/python', function(req, res){
+     var python = require('child_process').spawn(
+     'python',
+     // second argument is array of parameters, e.g.:
+     ["./python_files/pythonScript.py"]
+     );
+     var output = "";
+     python.stdout.on('data', function(data){ output += data });
+     python.on('close', function(code){ 
+	       if (code !== 0) {  
+	       return res.send(500, code); 
+	       
+	       }
+	        res.locals.title = 'Python';
+           	 res.locals.block= output;
+	       return res.render('generic');
+     });
+  
+});
+
 
 app.use(function(req, res, next){
  
