@@ -6,11 +6,20 @@ if (typeof sockethandler == 'undefined') { var sockethandler = {}; }
 
 var socket = io.connect();
 socket.on("dataServer", function(data) {
+
+console.log('Got asnwer from server');
+	plot_data(data,false);
+});
+
+function plot_data(data,client){
+
    //TODO: Aquí recibimos los puntos y los pintamos skisos con highchart
    var times =  new Date().getTime();
-   console.log('Got asnwer from server');
    var element=document.getElementById("plot");
-   var object = $.parseJSON(data);
+   var object = data;
+   if(!client){
+   	object = $.parseJSON(data);
+   }
 
    var datapoints = object[0].dps;
    console.log("Size: "+ datapoints.length);
@@ -107,8 +116,8 @@ socket.on("dataServer", function(data) {
    console.log("(4) Time: "+ (timef - times)+" ms")
    
    //TODO: Call report function from server and show results.
-   
-});
+
+}
 
 sockethandler.view1=function(data) {
  return "The message is:"+data;
@@ -208,8 +217,8 @@ function handleClick() {
         break;
       case '3':
         //Client HTML API mode
-        console.log('[handleClick] Client mode');      
-        x="Today is Wednesday";
+        console.log('[handleClick] Client mode');   
+	handleClient(amountPoints);	
         break;
       default:
         console.log('[handleClick] Default!');
@@ -221,6 +230,27 @@ function handleClick() {
 function handleServer(amountPoints){
      socket.emit("getDPServerMode", getQueryData(amountPoints));
 };
+
+
+
+function handleClient(amountPoints){
+	var options = getQueryData(amountPoints);
+	if(!options){
+		console.log("[handleClient] No options, taking default");
+             options = {start:'2014/04/04-12:00:00',
+                        end:'2014/04/18-15:46:17', 
+                        metric:'cipsi.weather.UU', 
+                        aggregator:'avg', 
+                        tags:{station:44640, quality_code:0}};
+         }
+         
+         var nodetsdb = new Nodetsdb({host:'haisen36.ux.uis.no', port:4242});
+         
+         nodetsdb.getDataPoints(options, function(data){
+	             plot_data(data,true);          
+  		});
+};
+
 
 
 function plot() {
