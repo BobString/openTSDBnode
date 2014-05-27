@@ -231,7 +231,7 @@ app.get('/python', function(req, res){
      var python = require('child_process').spawn(
      'python',
      // second argument is array of parameters, e.g.:
-     ["./python_files/pythonScript.py"]
+     ["./python_files/entryPoint.py"]
      );
      var output = "";
      python.stdout.on('data', function(data){ output += data });
@@ -307,6 +307,32 @@ websocket.sockets.on('connection', function (socket) {
      
      /* ServerMode */
      socket.on('getDPServerMode', function (options) {
+         if(!options){
+		console.log("No options, taking default");
+             options = {start:'2014/04/04-12:00:00',
+                        end:'2014/04/18-15:46:17', 
+                        metric:'cipsi.weather.UU', 
+                        aggregator:'avg', 
+                        tags:{station:44640, quality_code:0}};
+         }
+         var times =  new Date().getTime();   
+         var nodetsdb = new nodetsdblib({host:config.opentsdbserver, port:config.opentsdbserverport});
+         nodetsdb.getDataPoints(options, function(dp){
+             if(dp){
+                //There are datapoints
+                var timef =  new Date().getTime();
+		//console.log("(3) Time: "+ (timef - times)+" ms")
+                socket.emit("dataServer",dp);
+             }else{
+                //There are not datapoints
+                console.log('Sorry no datapoints');
+             }
+          
+  		});
+  	});
+  	
+  	/* Python Mode */
+     socket.on('getDPPythonMode', function (options) {
          var time1 =  new Date().getTime();
 	
          if(!options){
@@ -317,21 +343,23 @@ websocket.sockets.on('connection', function (socket) {
                         aggregator:'avg', 
                         tags:{station:44640, quality_code:0}};
          }
-         
-         var nodetsdb = new nodetsdblib({host:config.opentsdbserver, port:config.opentsdbserverport});
-         
-         nodetsdb.getDataPoints(options, function(dp){
-             console.log('callback!');
-             if(dp){
-		console.log('Dp response size: '+dp.length);
-                //There are datapoints
-                 socket.emit("dataServer",dp);
-             }else{
-                //There are not datapoints
-                console.log('Sorry no datapoints');
-             }
-          
-  		});
+         	var times =  new Date().getTime();
+	     var python = require('child_process').spawn(
+	     'python',
+	     // second argument is array of parameters, e.g.:
+	     ["./python_files/entryPoint.py"]
+	     );
+	     var output = "";
+	     python.stdout.on('data', function(data){ output += data });
+	     python.on('close', function(code){ 
+		       if (code !== 0) {  
+		       	console.log("Nope");
+		       }else{
+			var timef =  new Date().getTime();
+			console.log("(3 Python) Time: "+ (timef - times)+" ms")
+		 	socket.emit("dataServerPython",output);
+		       }
+	     });
   	});
 });
 

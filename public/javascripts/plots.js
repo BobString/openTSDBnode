@@ -6,15 +6,86 @@ if (typeof sockethandler == 'undefined') { var sockethandler = {}; }
 
 var socket = io.connect();
 socket.on("dataServer", function(data) {
-
-console.log('Got asnwer from server');
+	console.log('Got asnwer from server');
 	plot_data(data,false);
+	 socket.disconnect();
+});
+
+socket.on("dataServerPython", function(data) {
+	console.log('Got asnwer from server, python source');
+	 var element=document.getElementById("plot");
+	 $(function () {
+		$(element).highcharts({
+		    chart: {
+		        zoomType: 'x',
+		        spacingRight: 20
+		    },
+		    title: {
+		        text: 'Timepoints'
+		    },
+		    subtitle: {
+		        text: document.ontouchstart === undefined ?
+		            'Click and drag in the plot area to zoom in' :
+		            'Pinch the chart to zoom in'
+		    },
+		    xAxis: {
+		        type: 'datetime',
+		        maxZoom: 1 * 24 * 3600000, // one day
+		        title: {
+		            text: null
+		        }
+		    },
+		    yAxis: {
+		        title: {
+		            text: 'Temperature'
+		        }
+		    },
+		    tooltip: {
+		        shared: true
+		    },
+		    legend: {
+		        enabled: false
+		    },
+		    plotOptions: {
+		        area: {
+		            fillColor: {
+		                linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1},
+		                stops: [
+		                    [0, Highcharts.getOptions().colors[0]],
+		                    [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+		                ]
+		            },
+		            lineWidth: 1,
+		            marker: {
+		                enabled: false
+		            },
+		            shadow: false,
+		            states: {
+		                hover: {
+		                    lineWidth: 1
+		                }
+		            },
+		            threshold: null/*,
+		            turboThreshold: 8000*/
+		        }
+		    },
+	    
+		    series: [{
+		        type: 'area',
+		        name: 'Temperature (ºC)',
+		        pointInterval: 60 * 1000*10, //Every 10 minute, for one day: (24 * 3600 * 1000)
+		        pointStart: Date.UTC(2006, 0, 01),
+		        data: JSON.parse(data)
+		    }]
+		});
+	    });
+	 socket.disconnect();	    
 });
 
 function plot_data(data,client){
 
    //TODO: Aquí recibimos los puntos y los pintamos skisos con highchart
-   var times =  new Date().getTime();
+   
    var element=document.getElementById("plot");
    var object = data;
    if(!client){
@@ -41,9 +112,8 @@ function plot_data(data,client){
             }*/
    }
    dparray += ']';
-   console.log('dp array: '+dparray.length);
-//   console.log('dp array: '+dparray);
-   
+
+var times =  new Date().getTime();   
    $(function () {
         $(element).highcharts({
             chart: {
@@ -111,7 +181,6 @@ function plot_data(data,client){
     });
    
    
-   socket.disconnect();
    var timef =  new Date().getTime();
    console.log("(4) Time: "+ (timef - times)+" ms")
    
@@ -144,38 +213,36 @@ function r_mode_exec() {
 
 function getQueryData(amountMode){
     var data;
-    console.log('[getQueryData] Amount of points requested: '+amountMode);
-
     switch (amountMode){
       case '1':
-      //Small amount 420 points
-	console.log('[getQueryData] Small amount of points');
+      //Small amount 1284 points
+	console.log('[getQueryData] Small amount of points (1284)');
          data = {start:'2014/04/04-12:00:00',
-                        end:'2014/04/07-12:00:00', 
+                        end:'2014/04/13-12:00:00', 
                         metric:'cipsi.weather.TA', 
                         aggregator:'avg', 
                         tags:{station:44640, quality_code:0}};
         break;
       case '2':
-      //Medium amount 1428 points
-	console.log('[getQueryData] Medium amount of points');
+      //Medium amount 2435 points
+	console.log('[getQueryData] Medium amount of points (2435)');
         data = {start:'2014/04/04-12:00:00',
-                        end:'2014/04/14-12:00:00', 
+                        end:'2014/04/21-12:00:00', 
                         metric:'cipsi.weather.TA', 
                         aggregator:'avg', 
                         tags:{station:44640, quality_code:0}};
         break;
       case '3':
-      //Large amount 4450 points
-	console.log('[getQueryData] Large amount of points');
+      //Large amount 4567 points
+	console.log('[getQueryData] Large amount of points (4567)');
         data = {start:'2014/04/04-12:00:00',
-                        end:'2014/05/05-12:00:00', 
+                        end:'2014/05/06-12:00:00', 
                         metric:'cipsi.weather.TA', 
                         aggregator:'avg', 
                         tags:{station:44640, quality_code:0}};
         break;
       default:
-          console.log('[getQueryData] Default amount of points');
+          console.log('[getQueryData] Default amount of points (420)');
           data = {start:'2014/04/04-12:00:00',
                         end:'2014/04/07-12:00:00', 
                         metric:'cipsi.weather.TA', 
@@ -183,9 +250,6 @@ function getQueryData(amountMode){
                         tags:{station:44640, quality_code:0}};
         break;
       }
-    
-    //420 datapoints
-   
     
     return data;
 }
@@ -220,12 +284,21 @@ function handleClick() {
         console.log('[handleClick] Client mode');   
 	handleClient(amountPoints);	
         break;
+      case '4':
+        //Client HTML API mode
+        console.log('[handleClick] Python mode');   
+	handlePython(amountPoints);	
+        break;
       default:
         console.log('[handleClick] Default!');
         break;
       }
       event.preventDefault();
 }
+
+function handlePython(amountPoints){
+     socket.emit("getDPPythonMode", getQueryData(amountPoints));
+};
 
 function handleServer(amountPoints){
      socket.emit("getDPServerMode", getQueryData(amountPoints));
@@ -244,10 +317,12 @@ function handleClient(amountPoints){
                         tags:{station:44640, quality_code:0}};
          }
          
+         var times =  new Date().getTime();
          var nodetsdb = new Nodetsdb({host:'haisen36.ux.uis.no', port:4242});
-         
          nodetsdb.getDataPoints(options, function(data){
-	             plot_data(data,true);          
+         		var timef =  new Date().getTime();
+			console.log("(3 Client) Time: "+ (timef - times)+" ms")
+			plot_data(data,true);          
   		});
 };
 
